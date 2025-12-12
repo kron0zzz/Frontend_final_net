@@ -1,25 +1,15 @@
 import { useState } from "react";
 import "../styles/register.css";
+import axios from "axios";
+
+const API_URL = "/api/Auth";
 
 function Register() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
-  // Simulación de envío de registro (igual que tu login simulado)
-  async function fakeRegisterRequest(email, password) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (email.trim() !== "" && password.trim() !== "") {
-          resolve({ message: "Usuario registrado correctamente" });
-        } else {
-          reject(new Error("Datos inválidos"));
-        }
-      }, 600);
-    });
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,16 +22,15 @@ function Register() {
     }
 
     try {
-      const res = await fakeRegisterRequest(email, password);
-      setSuccess(res.message);
+      const res = await axios.post(`${API_URL}/register`, { UserName: username, Password:password, Role:"user"});
+      setSuccess(res.data.message || "Usuario registrado correctamente");
 
-      // En un backend real, aquí redirigirías después de un registro exitoso
       setTimeout(() => {
         window.location.href = "/";
       }, 1000);
-
     } catch (err) {
-      setError(err.message || "No se pudo registrar");
+      console.log(err.response?.data);
+      setError(err.response?.data?.message || "No se pudo registrar");
     }
   };
 
@@ -51,10 +40,10 @@ function Register() {
         <h2>Crear Usuario</h2>
 
         <input
-          type="email"
-          placeholder="Correo electrónico"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          type="text"
+          placeholder="Nombre de usuario"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           required
         />
 

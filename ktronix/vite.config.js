@@ -10,4 +10,13 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://apifinal2-bsgcdscjcbe0dbht.mexicocentral-01.azurewebsites.net',
+        changeOrigin: true,
+        secure: false, // si tu backend usa HTTPS con certificado válido, esto puede ser true
+      }
+    }
+  }
 })

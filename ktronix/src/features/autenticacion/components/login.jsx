@@ -1,38 +1,37 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { AuthContext } from "../AuthContext";
+
 import "../styles/login.css";
 
 function Login() {
-  const [email, setEmail] = useState("");
+  const { login } = useContext(AuthContext);
+  const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-
-  // Esta función simula lo que luego será la llamada real a la API
-  async function handleLoginRequest(email, password) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (email.trim() !== "" && password.trim() !== "") {
-          resolve({
-            token: "token_de_prueba_fake_123",
-            user: { email }
-          });
-        } else {
-          reject(new Error("Credenciales inválidas"));
-        }
-      }, 600);
-    });
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      const data = await handleLoginRequest(email, password);
+      const res = await fetch(
+        "/api/Auth/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ UserName: userName, Password: password, Role:"user" }),
+        }
+      );
 
-      localStorage.setItem("token", data.token);
+      if (!res.ok) throw new Error("Credenciales inválidas");
+
+      const data = await res.json();
+
+      login(data.token, { UserName: userName, Role: data.role || "user" });
 
       window.location.href = "/dashboard";
     } catch (err) {
+      console.log(err.response?.data);
       setError(err.message || "No se pudo iniciar sesión");
     }
   };
@@ -43,10 +42,10 @@ function Login() {
         <h2>Iniciar Sesión</h2>
 
         <input
-          type="email"
-          placeholder="Correo electrónico"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          type="text"
+          placeholder="Nombre de usuario"
+          value={userName}
+          onChange={(e) => setUserName(e.target.value)}
           required
         />
 
@@ -62,7 +61,6 @@ function Login() {
 
         <button type="submit">Ingresar</button>
 
-        {/* Botón de registro */}
         <button
           id="register"
           type="button"
