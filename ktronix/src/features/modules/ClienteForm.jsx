@@ -1,10 +1,13 @@
 // src/features/modules/ClienteForm.jsx
 import React, { useState } from 'react';
-import './styles/modules.css'
+import './styles/modules.css';
+import axios from 'axios';
+import { useAuth } from '../autenticacion/useAuth';
 
+const API_URL = "/api/Cliente";
 
 function ClienteForm({ cliente, onSave, onCancel }) {
-  // Inicializamos el estado del formulario con los datos del cliente que se pasa
+  const { token } = useAuth();
   const [formData, setFormData] = useState(cliente);
 
   const isCreating = cliente.id === null;
@@ -14,13 +17,27 @@ function ClienteForm({ cliente, onSave, onCancel }) {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Aquí iría la llamada a la API (POST para crear, PUT para actualizar)
-    console.log("Datos a guardar:", formData);
-    
-    // Luego de la supuesta llamada a la API, llamamos a onSave para volver a la lista
-    onSave(); 
+
+    try {
+      if (isCreating) {
+        // Crear cliente
+        await axios.post(API_URL, formData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } else {
+        // Actualizar cliente
+        await axios.put(`${API_URL}/${formData.id}`, formData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+
+      onSave(); // vuelve a la lista y recarga clientes
+    } catch (err) {
+      console.error("Error guardando cliente:", err);
+      alert("Ocurrió un error al guardar el cliente.");
+    }
   };
 
   return (
@@ -29,7 +46,7 @@ function ClienteForm({ cliente, onSave, onCancel }) {
         <h2 className="module-title">
           {isCreating ? 'Crear Nuevo Cliente' : `Editar Cliente: ${formData.nombre}`}
         </h2>
-        
+
         <form onSubmit={handleSubmit} className="crud-form">
           <div className="form-group">
             <label htmlFor="nombre">Nombre Completo:</label>
@@ -68,18 +85,8 @@ function ClienteForm({ cliente, onSave, onCancel }) {
               className="form-input"
             />
           </div>
-          
-          <div className="form-group">
-            <label htmlFor="direccion">Dirección:</label>
-            <input 
-              type="text" 
-              id="direccion" 
-              name="direccion" 
-              value={formData.direccion} 
-              onChange={handleChange} 
-              className="form-input"
-            />
-          </div>
+
+      
 
           <div className="form-actions">
             <button type="submit" className="action-button save">

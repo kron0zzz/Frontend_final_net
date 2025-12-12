@@ -1,62 +1,91 @@
 // src/features/modules/Clientes.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-import './styles/modules.css'
-import ClienteForm from './ClienteForm.jsx'; 
+import "./styles/modules.css";
+import ClienteForm from "./ClienteForm.jsx";
+import { useAuth } from "../autenticacion/useAuth.jsx";
 
-
-// Datos de ejemplo con campo de dirección completo
-const initialClientes = [
-    { id: 1, nombre: "Ana García", email: "ana@lunallena.com", telefono: "3001234567", direccion: "Calle 10 # 5-80" },
-    { id: 2, nombre: "Luis Pérez", email: "luis@lunallena.com", telefono: "3109876543", direccion: "Avenida Sur # 22-15" },
-    { id: 3, nombre: "Marta López", email: "marta@lunallena.com", telefono: "3205554433", direccion: "Carrera 70 # 1-90" },
-];
+const API_URL = "/api/Cliente";
 
 function Clientes() {
-  // 2. Estados CLAVE: la lista de clientes y el cliente actualmente editado.
-  const [clientes, setClientes] = useState(initialClientes);
+  const { token } = useAuth();
+
+  const [clientes, setClientes] = useState([]);
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
-  
-  // Lógica para ABRIR el formulario de edición/creación
+
+  // Función reutilizable para cargar clientes
+  const fetchClientes = async () => {
+    try {
+      const res = await axios.get(API_URL, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setClientes(res.data);
+    } catch (err) {
+      console.error("Error al obtener clientes:", err);
+    }
+  };
+
+  // Cargar clientes al montar el componente
+  useEffect(() => {
+    const cargar = async () => {
+      await fetchClientes();
+    };
+    cargar();
+  }, []);
+
+  // Abrir formulario para crear o editar
   const handleEdit = (cliente) => {
-    // Si pasamos un cliente (al hacer click en 'Ver'), lo editamos. 
-    // Si pasamos un objeto vacío/null (al hacer click en '+ Nuevo'), creamos.
     setClienteSeleccionado(cliente);
   };
 
-  // Lógica para VOLVER a la tabla (usada en onSave y onCancel del formulario)
+  // Volver a la lista
   const handleVolver = () => {
     setClienteSeleccionado(null);
-  };
-  
-  // Lógica de eliminación (funcional)
-  const handleDelete = (id) => {
-      if (window.confirm("¿Estás seguro de que quieres eliminar este cliente?")) {
-          setClientes(clientes.filter(c => c.id !== id));
-      }
+    fetchClientes(); // recargar después de guardar
   };
 
-  // 3. RENDERIZADO CONDICIONAL: Si hay un cliente seleccionado, MUESTRA EL FORMULARIO
+  // Eliminar cliente
+  const handleDelete = async (id) => {
+    if (!window.confirm("¿Seguro que deseas eliminar este cliente?")) return;
+
+    try {
+      await axios.delete(`${API_URL}/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchClientes();
+    } catch (err) {
+      console.error("Error eliminando cliente:", err);
+    }
+  };
+
+  // Si se está editando o creando, mostrar el formulario
   if (clienteSeleccionado) {
-      return (
-          <ClienteForm 
-              cliente={clienteSeleccionado} 
-              onSave={handleVolver} // Al 'guardar' simuladamente, volvemos a la lista
-              onCancel={handleVolver} 
-          />
-      );
+    return (
+      <ClienteForm
+        cliente={clienteSeleccionado}
+        onSave={handleVolver}
+        onCancel={handleVolver}
+      />
+    );
   }
 
-
-  // 4. VISTA POR DEFECTO: TABLA DE LECTURA (READ)
+  // Vista principal: tabla de clientes
   return (
     <div className="module-page-container">
       <div className="module-card-content">
         <h2 className="module-title">Clientes Registrados</h2>
-        
-        {/* Botón para crear nuevo cliente (llama a handleEdit con un objeto vacío para iniciar la creación) */}
-        <button 
-          onClick={() => handleEdit({ id: null, nombre: '', email: '', telefono: '', direccion: '' })} 
+
+        <button
+          onClick={() =>
+            handleEdit({
+              id: null,
+              nombre: "",
+              email: "",
+              telefono: "",
+
+            })
+          }
           className="add-button"
         >
           + Nuevo Cliente
@@ -80,16 +109,30 @@ function Clientes() {
                 <td>{cliente.email}</td>
                 <td>{cliente.telefono}</td>
                 <td>
-                  {/* Botón VER/EDITAR: llama a handleEdit con el cliente específico */}
-                  <button onClick={() => handleEdit(cliente)} className="action-button view">
+                  <button
+                    onClick={() => handleEdit(cliente)}
+                    className="action-button view"
+                  >
                     Ver / Editar
                   </button>
-                  <button onClick={() => handleDelete(cliente.id)} className="action-button delete">
+
+                  <button
+                    onClick={() => handleDelete(cliente.id)}
+                    className="action-button delete"
+                  >
                     Eliminar
                   </button>
                 </td>
               </tr>
             ))}
+
+            {clientes.length === 0 && (
+              <tr>
+                <td colSpan="5" style={{ textAlign: "center", padding: "20px" }}>
+                  No hay clientes registrados.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
