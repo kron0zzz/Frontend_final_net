@@ -149,3 +149,51 @@
     background-color: #6c757d; /* Gris para cancelar */
     color: white;
 }
+
+
+.module-form {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  width: 400px;
+}
+
+.module-form input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.module-btn {
+  margin-top: 10px;
+  padding: 10px;
+  background: #1b74e4;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.module-btn:hover {
+  background: #145cc0;
+}
+
+
+.module-page-container {
+  padding: 20px;
+}
+
+.module-card-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.module-title {
+  font-size: 22px;
+}
